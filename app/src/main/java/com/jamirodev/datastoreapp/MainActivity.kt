@@ -17,17 +17,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jamirodev.datastoreapp.ui.theme.DataStoreAppTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,12 +53,18 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Greeting() {
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val dataStore = StoreUserEmail(context)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
         var email by rememberSaveable { mutableStateOf("") }
+        val userEmail = dataStore.getEmail.collectAsState(initial = "")
 
         TextField(
             value = email,
@@ -62,11 +72,15 @@ fun Greeting() {
             keyboardOptions = KeyboardOptions().copy(keyboardType = KeyboardType.Email)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /*TODO*/ }) {
+        Button(onClick = {
+            scope.launch {
+                dataStore.saveEmail(email)
+            }
+        }) {
             Text(text = "Save email")
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Email")
+        Text(text = userEmail.value)
     }
 }
 
